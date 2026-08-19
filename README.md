@@ -85,7 +85,13 @@ Since ADC1 produces values from 0–4095, directly using the ADC reading as the 
 
 I changed the TIM2 counter period to `4095` so the ADC reading could be used directly as the PWM compare value.
 
----
+### Decision 3: Keep the CubeMX-Generated Modular Peripheral Structure
+
+**Reason:**
+
+I kept the CubeMX-generated separation of peripheral configuration across modules such as `adc.c`, `tim.c`, `gpio.c`, and `usart.c`, rather than consolidating the peripheral configuration into `main.c`.
+
+This keeps peripheral initialization separate from the main application logic, making the project easier to navigate, debug, and extend as additional peripherals and features are introduced.
 
 ## 6. Problems / Challenges
 
