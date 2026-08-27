@@ -47,8 +47,8 @@
 
 /* USER CODE BEGIN PV */
 
-//Set the condition as false
- uint32_t led_enabled = 0;
+//Set the condition as false by default so that this code controls the motor before the interrupt
+ volatile uint32_t led_enabled = 0;
 
  //Initialize the variable that will hold the analog reading
 volatile uint32_t pot_reading = 0;
@@ -70,7 +70,6 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
-
 int main(void)
 {
 
@@ -99,34 +98,40 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   //Initialize the PWM for the LED
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 
+  //Initialize PWM for the Motor
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  //Initialize the ADC and read potentiometer value
-	    HAL_ADC_Start(&hadc1);
-	    HAL_ADC_PollForConversion(&hadc1, 10);
-	    pot_reading =  HAL_ADC_GetValue(&hadc1);
+    while (1)
+    {
+  	  //Initialize the ADC and read potentiometer value
+  HAL_ADC_Start(&hadc1);
+  	    HAL_ADC_PollForConversion(&hadc1, 10);
+  	    pot_reading =  HAL_ADC_GetValue(&hadc1);
 
-	    //interrupt Service routine
-	  if (led_enabled == 0)
-	  {
-	      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pot_reading);
-	  }
-	  else
-	  {
-	      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
-	  }
-  }
-  /* USER CODE END 3 */
+  	    //interrupt Service routine
+     	  if (led_enabled == 0)
+  	  {
+  		  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+  	      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, pot_reading);
+  	  }
+  	  else
+  	  {
+  	      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pot_reading);
+  	      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
+  	  }
+    }
 }
+
 
 /**
   * @brief System Clock Configuration
@@ -197,6 +202,7 @@ void Error_Handler(void)
   while (1)
   {
   }
+
   /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT
